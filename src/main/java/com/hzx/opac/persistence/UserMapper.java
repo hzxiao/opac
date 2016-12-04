@@ -4,6 +4,7 @@ import com.hzx.opac.domain.User;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;
+import org.springframework.dao.DuplicateKeyException;
 
 
 public interface UserMapper {

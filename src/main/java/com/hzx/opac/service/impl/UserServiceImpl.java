@@ -28,12 +28,23 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public User doRegister(User newUser) {
-        return null;
+    public int doRegister(User newUser) {
+        return userMapper.insert(newUser);
     }
 
     @Override
     public boolean doModify(User user) {
-        return false;
+        int ret = userMapper.updateByPrimaryKeySelective(user);
+        return ret != 0;
+    }
+
+    @Override
+    public User getUserById(int userId) {
+        return userMapper.selectByPrimaryKey(userId);
+    }
+
+    @Override
+    public User getUserByUsername(String username) {
+        return userMapper.selectByUsername(username);
     }
 }

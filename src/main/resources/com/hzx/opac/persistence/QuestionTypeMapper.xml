@@ -18,10 +18,17 @@
         delete from t_question_type
         where question_type_id = #{questionTypeId,jdbcType=INTEGER}
     </delete>
-    <insert id="insert" parameterType="com.hzx.opac.domain.QuestionType">
-        insert into t_question_type (question_type_id, type_desc)
-        values (#{questionTypeId,jdbcType=INTEGER}, #{typeDesc,jdbcType=VARCHAR})
+
+    <insert id="insert" parameterType="com.hzx.opac.domain.QuestionType" useGeneratedKeys="true"
+        keyProperty="questionTypeId" keyColumn="question_type_id">
+        insert into t_question_type (type_desc)
+        values (#{typeDesc,jdbcType=VARCHAR})
+
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="questionTypeId">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
     </insert>
+
     <insert id="insertSelective" parameterType="com.hzx.opac.domain.QuestionType">
         insert into t_question_type
         <trim prefix="(" suffix=")" suffixOverrides=",">

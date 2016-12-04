@@ -1,20 +1,17 @@
 package com.hzx.opac.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.hzx.opac.api.ApiField;
-import com.hzx.opac.api.UserFrame;
-import com.hzx.opac.domain.Question;
-import com.hzx.opac.domain.QuestionType;
+import com.hzx.opac.api.HttpResult;
+import com.hzx.opac.api.ResultCode;
 import com.hzx.opac.domain.User;
-import com.hzx.opac.service.QuestionTypeService;
 import com.hzx.opac.service.UserService;
 //import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
+import java.io.IOException;
 
 
 @Controller
@@ -27,51 +24,86 @@ public class UserController {
 //    private Logger logger = Logger.getLogger(UserController.class);
 
 
-    @Autowired
-    private QuestionTypeService questionTypeService;
-
 	@RequestMapping(value="/login",method={RequestMethod.GET})
-	@ResponseBody public UserFrame login(String username, String password) {
-        UserFrame frame = new UserFrame();
+	@ResponseBody public HttpResult login(String username, String password) {
+        HttpResult<User> frame = new HttpResult<User>();
         User user = userService.doLogin(username, password);
         if (user == null) {
-            frame.setError_code(ApiField.LOGIN_FIAL);
+            frame.setError_code(ResultCode.PASSWORD_ERROR);
             return frame;
         }
 //        logger.info("login success! userID = " + user.getUserId());
-        try {
-            String userInfo = objectMapper.writeValueAsString(user);
-            frame.setResult(userInfo);
-
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        frame.setResult(user);
         return frame;
 	}
 
-	@RequestMapping(value = "register")
+    /**
+     * 获取特定用户的信息
+     * @param userId
+     * @return
+     */
+	@RequestMapping(value = "/{userId}", method = RequestMethod.GET)
     @ResponseBody
-	public UserFrame register(){
-        QuestionType type = new QuestionType();
-        type.setTypeDesc("life");
-        questionTypeService.insert(type);
-
-        QuestionType type1 = questionTypeService.selectById(2);
-        if (type1 != null) {
-            System.out.println(type1.getQuestionTypeId() + "---" + type1.getTypeDesc());
-        } else {
-            System.out.println("type1 is null");
+	public HttpResult userInfo(@PathVariable Integer userId) {
+        HttpResult<User> frame = new HttpResult<User>();
+        User user = userService.getUserById(userId);
+        frame.setError_code(ResultCode.SUCCESS);
+        if (user == null) {
+            frame.setError_code(ResultCode.USER_NOT_EXIST);
         }
+        frame.setResult(user);
+        return frame;
+    }
 
-        QuestionType type2 = questionTypeService.selectByDesc("life");
-        if (type2 != null) {
-            System.out.println(type2.getQuestionTypeId() + "---" + type2.getTypeDesc());
-        } else {
-            System.out.println("type2 is null");
+    /**
+     * 处理注册
+     * @param userInfo
+     * @return
+     */
+	@RequestMapping(value = "register", method = RequestMethod.POST)
+    @ResponseBody
+	public HttpResult register(@RequestBody String userInfo){
+        HttpResult<User> frame = new HttpResult<User>();
+        try {
+            User user = objectMapper.readValue(userInfo, User.class);
+            user.setUserId(null);
+            int ret = userService.doRegister(user);
+            if (ret == 0 || user.getUserId() == null) { //存储到数据库失败
+                frame.setError_code(ResultCode.SERVER_ERROR);
+                return frame;
+            }
+            //注册成功
+            frame.setError_code(ResultCode.SUCCESS);
+            frame.setResult(user);
+            return frame;  //成功回复给客户端
+        } catch (DuplicateKeyException dke){
+            //用户名已存在
+            frame.setError_code(ResultCode.USER_EXISTED);
+        } catch (IOException e) {
+            frame.setError_code(ResultCode.SERVER_ERROR);
+            e.printStackTrace();
         }
-//        questionTypeService.deleteById(1);
-        List<QuestionType> list = questionTypeService.list();
-        System.out.println(list.size());
-        return null;
+        return frame;
+    }
+
+    /**
+     * 更改用户的资料
+     * @return
+     */
+    @RequestMapping(value = "/modify")
+    @ResponseBody
+    public HttpResult modifyInfo(@RequestBody String userInfo) {
+        HttpResult<User> frame = new HttpResult<User>();
+        try {
+            User user = objectMapper.readValue(userInfo, User.class);
+            boolean modified = userService.doModify(user);
+            if (modified) {
+                frame.setError_code(ResultCode.SUCCESS);
+            }
+        } catch (IOException e) {
+            frame.setError_code(ResultCode.SERVER_ERROR);
+            e.printStackTrace();
+        }
+        return frame;
     }
 }

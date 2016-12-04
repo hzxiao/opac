@@ -7,7 +7,11 @@ public interface UserService {
 
     User doLogin(String username, String password);
 
-    User doRegister(User newUser);
+    int doRegister(User newUser);
 
     boolean doModify(User user);
+
+    User getUserById(int userId);
+
+    User getUserByUsername(String username);
 }

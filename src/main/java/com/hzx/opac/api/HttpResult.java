@@ -1,18 +1,16 @@
 package com.hzx.opac.api;
 
-/**
- * Created by hz on 16-11-28.
- */
-public class UserFrame {
-    private String error_code;
+public class HttpResult<T> {
+    private int error_code;
     private String reason;
-    private String result;
 
-    public String getError_code() {
+    private T result;
+
+    public int getError_code() {
         return error_code;
     }
 
-    public void setError_code(String error_code) {
+    public void setError_code(int error_code) {
         this.error_code = error_code;
     }
 
@@ -24,11 +22,11 @@ public class UserFrame {
         this.reason = reason;
     }
 
-    public String getResult() {
+    public T getResult() {
         return result;
     }
 
-    public void setResult(String result) {
+    public void setResult(T result) {
         this.result = result;
     }
 }
