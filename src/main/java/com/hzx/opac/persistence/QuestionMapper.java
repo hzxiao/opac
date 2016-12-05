@@ -7,7 +7,6 @@ import com.hzx.opac.domain.Question;
  */
 public interface QuestionMapper {
 
-
     int deleteByPrimaryKey(Integer questionId);
 
     int insert(Question record);
